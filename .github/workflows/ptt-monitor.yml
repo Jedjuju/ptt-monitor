@@ -1,0 +1,51 @@
+name: PTT Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # 每 5 分鐘執行一次
+  workflow_dispatch:          # 允許手動觸發
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore state cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ptt_state.json
+          key: ptt-state-${{ github.run_id }}
+          restore-keys: ptt-state-
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Write non-sensitive config
+        run: |
+          python - <<'EOF'
+          import json
+          cfg = {
+            "watch_authors": ["lotterywin", "bvbin10242", "dannydogdog"],
+            "expire_days": 3,
+            "comment_watch_hours": 6,
+            "comment_poll_sec": 60
+          }
+          with open("ptt_config.json", "w", encoding="utf-8") as f:
+              json.dump(cfg, f, ensure_ascii=False)
+          EOF
+
+      - name: Run monitor check
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python ptt_check.py
+
+      - name: Save state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ptt_state.json
+          key: ptt-state-${{ github.run_id }}

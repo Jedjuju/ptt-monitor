@@ -1,0 +1,5 @@
+ptt_config.json
+ptt_state.json
+__pycache__/
+*.pyc
+*.md
