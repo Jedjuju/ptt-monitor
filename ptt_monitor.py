@@ -44,8 +44,8 @@ CONFIG_FILE = os.path.join(_HERE, "ptt_config.json")
 
 def _load_config() -> tuple[str, str, dict]:
     """讀取 Telegram Token / Chat ID 及其他選用設定，環境變數優先"""
-    token   = os.environ.get("TELEGRAM_TOKEN", "")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    token   = os.environ.get("TELEGRAM_TOKEN", "").strip()
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     cfg: dict = {}
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, encoding="utf-8") as f:
