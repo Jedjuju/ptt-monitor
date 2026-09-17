@@ -31,9 +31,10 @@ _SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # ── 設定 ─────────────────────────────────────────────────────────────────────
 
-PTT_BOARD = "SportLottery"
-PTT_INDEX = f"https://www.ptt.cc/bbs/{PTT_BOARD}/index.html"
-PTT_BASE  = "https://www.ptt.cc"
+PTT_BOARD  = "SportLottery"
+PTT_INDEX  = f"https://www.pttapp.cc/bbs/{PTT_BOARD}/index.html"
+PTT_BASE   = "https://www.pttapp.cc"   # scraping source (not blocked by PTT)
+PTT_NOTIFY = "https://www.ptt.cc"      # Telegram notification links
 
 POLL_SEC  = 60
 
@@ -147,7 +148,7 @@ def fetch_articles() -> list[dict]:
         articles.append({
             "id":     art_id,
             "title":  title,
-            "url":    PTT_BASE + href,
+            "url":    PTT_NOTIFY + href,
             "author": author,
             "date":   date,
             "nrec":   nrec or "0",
@@ -269,7 +270,7 @@ def make_article_message(article: dict) -> str:
 
 
 def make_comment_message(art_id: str, art_title: str, comment: dict) -> str:
-    url       = f"{PTT_BASE}/bbs/{PTT_BOARD}/{art_id}.html"
+    url       = f"{PTT_NOTIFY}/bbs/{PTT_BOARD}/{art_id}.html"
     tag_label = {"推": "推文", "噓": "噓文", "→": "回文"}.get(comment["tag"], "留言")
     return (
         f"<b>PTT 運彩版  ★ 關注作者留言</b>\n\n"
