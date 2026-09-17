@@ -63,14 +63,24 @@ def main():
     new = [a for a in articles if a["id"] not in seen]
 
     if new:
-        M._log(f"發現 {len(new)} 篇新文章！")
+        notify_cutoff = time.time() - M.EXPIRE_DAYS * 86400
+        notified = 0
         for article in new:
+            ts = M._id_to_ts(article["id"])
+            if ts and ts < notify_cutoff:
+                age_days = (time.time() - ts) / 86400
+                M._log(f"  - 略過舊文章（{age_days:.0f} 天前）：{article['title']}")
+                seen.add(article["id"])
+                continue
             watched = article["author"].lower() in M.WATCH_AUTHORS
             tag = "★ " if watched else ""
             M._log(f"  + {tag}{article['title']}  ({article['author']})")
             ok = M.send_telegram(M.make_article_message(article))
             M._log(f"    TG: {'OK' if ok else 'SKIP'}")
             seen.add(article["id"])
+            notified += 1
+        if notified:
+            M._log(f"發現 {notified} 篇新文章！")
         M.save_state(seen, seen_comments, keep_ids=current_ids)
     else:
         M._log(f"無新文章（共 {len(articles)} 篇）")
