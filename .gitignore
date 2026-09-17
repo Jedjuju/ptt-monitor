@@ -3,3 +3,6 @@ ptt_state.json
 __pycache__/
 *.pyc
 *.md
+dist/
+build/
+*.spec

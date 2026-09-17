@@ -3,7 +3,38 @@
 """PTT 運彩版 - 單次檢查（GitHub Actions 用，不含常駐迴圈）"""
 
 import sys
+import time
+import urllib.error
 import ptt_monitor as M
+
+_RETRY = 3
+_RETRY_DELAY = 15  # seconds between retries
+
+
+def _fetch_with_retry() -> list[dict]:
+    last_exc: Exception = RuntimeError("no attempts made")
+    for attempt in range(1, _RETRY + 1):
+        try:
+            return M.fetch_articles()
+        except urllib.error.HTTPError as e:
+            last_exc = e
+            M._log(f"[取得文章失敗] HTTP {e.code}  (第 {attempt}/{_RETRY} 次)")
+            if e.code == 403:
+                if attempt < _RETRY:
+                    time.sleep(_RETRY_DELAY)
+                else:
+                    # PTT 持續封鎖此 IP，不視為程式錯誤，保持 chain 繼續跑
+                    M._log("[403] PTT 封鎖此 IP，本次略過（exit 0）")
+                    sys.exit(0)
+            else:
+                if attempt < _RETRY:
+                    time.sleep(_RETRY_DELAY)
+        except Exception as e:
+            last_exc = e
+            M._log(f"[取得文章失敗] {e}  (第 {attempt}/{_RETRY} 次)")
+            if attempt < _RETRY:
+                time.sleep(_RETRY_DELAY)
+    raise last_exc
 
 
 def main():
@@ -13,7 +44,7 @@ def main():
     is_init = not seen
 
     try:
-        articles = M.fetch_articles()
+        articles = _fetch_with_retry()
     except Exception as e:
         M._log(f"[取得文章失敗] {e}")
         sys.exit(1)

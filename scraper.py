@@ -402,7 +402,7 @@ def main():
     print("[3/3] 生成報告...")
     md = build_markdown(categorized, today_str)
 
-    out_dir = os.path.dirname(os.path.abspath(__file__))
+    out_dir = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(os.path.abspath(__file__))
     out_path = os.path.join(out_dir, f"{today_str}.md")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(md)
